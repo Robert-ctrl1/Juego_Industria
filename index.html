@@ -4,15 +4,46 @@
   <meta charset="UTF-8">
   <title>AHORA INDUSTRIA</title>
   <style>
-    body { font-family: Arial, sans-serif; background: #f2f2f2; text-align: center; padding: 30px; }
-    .container { background: white; padding: 30px; border-radius: 12px; max-width: 600px; margin: auto; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      text-align: center;
+      padding: 30px;
+      overflow-x: hidden;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      max-width: 600px;
+      margin: auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      position: relative;
+      z-index: 1;
+    }
     h1 { color: #333; }
     .word { font-size: 36px; letter-spacing: 10px; margin: 20px 0; }
     .hint { font-size: 18px; color: #666; margin-bottom: 10px; }
     input[type="text"] { font-size: 24px; width: 50px; text-align: center; text-transform: uppercase; }
     button { font-size: 16px; margin: 10px 5px; padding: 10px 20px; cursor: pointer; }
     .feedback { font-weight: bold; margin-top: 10px; color: green; }
-    .barassi-img, #gifFinal { display: none; margin: 20px auto; width: 250px;border-radius: 10px; }
+    .barassi-img, #gifFinal { display: none; margin: 20px auto; width: 400px;border-radius: 10px; }
+
+    /* Confetti estilo papelitos */
+    .confetti { position: fixed; top: 0;left: 0; width: 100%; height: 0; z-index: 999; pointer-events: none;}
+
+    .confetti-piece { position: absolute;width: 10px; height: 20px; background-color: rgb(76, 5, 117); opacity: 0.9;animation: fall linear infinite; transform: rotate(0deg); border-radius: 2px;}
+
+    @keyframes fall {
+      0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(100vh) rotate(360deg);
+        opacity: 0;
+      }
+    }
   </style>
 </head>
 <body>
@@ -29,7 +60,8 @@
     <button onclick="nextWord()" id="nextBtn" style="display:none;">➡️ Siguiente palabra</button>
   </div>
 
-  <!-- AUDIO DE ACIERTO -->
+  <div class="confetti" id="confettiContainer"></div>
+
   <audio id="correctSound">
     <source src="correcto.mp3.mp3" type="audio/mp4">
     Tu navegador no soporta audio.
@@ -38,38 +70,30 @@
   <script>
     const palabras = [
       { palabra: "ROSTER", pista: "Sistema de turnos rotativos, especialmente común en industrias como la minería o la petrolera" },
-      { palabra: "TPM", pista: "Siglas de metodología de gestión que busca maximizar la eficiencia de los equipos y maquinarias, involucrando a todos los empleados en el proceso de mantenimiento" }
+      { palabra: "TPM", pista: "Siglas de metodología de gestión que busca maximizar la eficiencia de los equipos y maquinarias, involucrando a todos los empleados en el proceso de mantenimiento" },
+      { palabra: "INGENIERO DE PIPING", pista: "Profesional especializado en el diseño, análisis y supervisión de la instalación de sistemas de tuberías en diversas industrias." },
+      { palabra: "KAIZEN", pista: "Filosofía japonesa que promueve la mejora continua a través de cambios pequeños y constantes, buscando la optimización de procesos y la eliminación de desperdicios" },
+      { palabra: "ENERGIA RENOVABLE", pista: "Proviene de fuentes naturales que se reponen continuamente y no se agotan con su uso" },
+      { palabra: "PUNA", pista: "Región compartida por Jujuy, Salta y Catamarca, considerada un área de gran potencial para la extracción de litio, un mineral clave para las baterías y la transición energética" },
+      { palabra: "CONTROLADOR LOGICO PROGRAMABLE", pista: "Dispositivo electrónico digital diseñado para automatizar procesos industriales" },
+      { palabra: "ARMINERA", pista: "Evento exclusivo para profesionales, empresarios e interesados en la industria minera" },
+      { palabra: "INTELIGENCIA ARTIFICIAL", pista: "Tecnología que revolucionó la industria al automatizar procesos, optimizar la producción y mejorar la toma de decisiones" },
+      { palabra: "RED MIA", pista: "Organización que busca promover el liderazgo femenino y la participación de las mujeres en diferentes sectores industriales" },
+      { palabra: "LEAN MANUFACTURING", pista: "Sistema de gestión de la producción que busca maximizar el valor para el cliente eliminando desperdicios y optimizando procesos" },
+      { palabra: "DOWNSTREAM", pista: "En la industria petrolera: fase final de la cadena de suministro, que abarca la refinación de petróleo crudo y la transformación y distribución de productos derivados del petróleo" },
+      { palabra: "REFINERIA", pista: "Instalación industrial que procesa grandes cantidades de materias primas, como petróleo, para producir productos de valor agregado, como combustibles, lubricantes y productos petroquímicos" }
     ];
 
-    const imagenesCorrectas = [
-      "barassi-2022.webp",
-      "download.jpg",
-      "barassi-contento-4.jfif",
-      "barassi-contento-5.jfif",
-      "brassi-contento-3.jfif",
-      "barassi-contento-7.jfif",
-      "barassi-contento-8.jfif",
-      "barassi-contento-9.jfif"
-    ];
+    const imagenesCorrectas = ["barassi-2022.webp", "download.jpg"];
     let imagenesCorrectasDisponibles = [...imagenesCorrectas];
-
-    const imagenesError = [
-      "barassi-triste-1.jfif",
-      "barassi-triste-2.jfif",
-      "barassi-triste-3.jfif",
-      "barassi-triste-4.jpg",
-      "barassi-triste-5.jpg",
-      "barassi-triste-6.jfif"
-    ];
+    const imagenesError = ["barassi-triste-1.jfif", "barassi-triste-2.jfif"];
     let indexError = 0;
-
     let index = 0;
     let estado = [];
     let audioYaReproducido = false;
 
     function mostrarPalabra() {
-      const display = estado.join(" ");
-      document.getElementById("word").textContent = display;
+      document.getElementById("word").textContent = estado.join(" ");
     }
 
     function cargarPalabra() {
@@ -108,15 +132,12 @@
           audioYaReproducido = true;
         }
 
-        if (imagenesCorrectasDisponibles.length > 0) {
-          const randomIndex = Math.floor(Math.random() * imagenesCorrectasDisponibles.length);
-          const selectedImg = imagenesCorrectasDisponibles.splice(randomIndex, 1)[0];
-          document.getElementById("barassiImg").src = selectedImg;
-        } else {
-          document.getElementById("barassiImg").src = imagenesCorrectas[Math.floor(Math.random() * imagenesCorrectas.length)];
-        }
+        const barassiImg = document.getElementById("barassiImg");
+        barassiImg.src = imagenesCorrectasDisponibles.length > 0
+          ? imagenesCorrectasDisponibles.splice(Math.floor(Math.random() * imagenesCorrectasDisponibles.length), 1)[0]
+          : imagenesCorrectas[0];
+        barassiImg.style.display = "block";
 
-        document.getElementById("barassiImg").style.display = "block";
       } else {
         if (acierto) {
           document.getElementById("feedback").textContent = "✔️ Letra correcta";
@@ -141,9 +162,28 @@
         document.getElementById("feedback").textContent = "¡Gracias por jugar!";
         document.getElementById("barassiImg").style.display = "none";
         document.getElementById("gifFinal").style.display = "block";
+        lanzarConfetti();
         return;
       }
       cargarPalabra();
+    }
+
+    function lanzarConfetti() {
+      const container = document.getElementById("confettiContainer");
+      for (let i = 0; i < 100; i++) {
+        const confetti = document.createElement("div");
+        confetti.classList.add("confetti-piece");
+        confetti.style.left = Math.random() * 100 + "vw";
+        confetti.style.animationDuration = (Math.random() * 2 + 3) + "s";
+        confetti.style.backgroundColor = getRandomGoldColor();
+        container.appendChild(confetti);
+        setTimeout(() => confetti.remove(), 5000);
+      }
+    }
+
+    function getRandomGoldColor() {
+      const colors = ["#FFD700", "#FFC300", "#FFB800", "#F2C94C"];
+      return colors[Math.floor(Math.random() * colors.length)];
     }
 
     cargarPalabra();
