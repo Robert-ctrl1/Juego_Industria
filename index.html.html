@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>AHORA INDUSTRIA</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f2f2f2; text-align: center; padding: 30px; }
+    .container { background: white; padding: 30px; border-radius: 12px; max-width: 600px; margin: auto; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    h1 { color: #333; }
+    .word { font-size: 36px; letter-spacing: 10px; margin: 20px 0; }
+    .hint { font-size: 18px; color: #666; margin-bottom: 10px; }
+    input[type="text"] { font-size: 24px; width: 50px; text-align: center; text-transform: uppercase; }
+    button { font-size: 16px; margin: 10px 5px; padding: 10px 20px; cursor: pointer; }
+    .feedback { font-weight: bold; margin-top: 10px; color: green; }
+    .barassi-img, #gifFinal { display: none; margin: 20px auto; width: 250px;border-radius: 10px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎯 AHORA INDUSTRIA</h1>
+    <div class="hint" id="hint"></div>
+    <div class="word" id="word"></div>
+    <input type="text" id="letter" maxlength="1">
+    <button onclick="checkLetter()">Adivinar letra</button>
+    <div class="feedback" id="feedback"></div>
+    <img id="barassiImg" class="barassi-img" src="" alt="Barassi reacción">
+    <img id="gifFinal" src="fin-juego.gif" alt="Juego finalizado 🎉">
+    <br>
+    <button onclick="nextWord()" id="nextBtn" style="display:none;">➡️ Siguiente palabra</button>
+  </div>
+
+  <!-- AUDIO DE ACIERTO -->
+  <audio id="correctSound">
+    <source src="correcto.mp3.mp3" type="audio/mp4">
+    Tu navegador no soporta audio.
+  </audio>
+
+  <script>
+    const palabras = [
+      { palabra: "ROSTER", pista: "Sistema de turnos rotativos, especialmente común en industrias como la minería o la petrolera" },
+      { palabra: "TPM", pista: "Siglas de metodología de gestión que busca maximizar la eficiencia de los equipos y maquinarias, involucrando a todos los empleados en el proceso de mantenimiento" }
+    ];
+
+    const imagenesCorrectas = [
+      "barassi-2022.webp",
+      "download.jpg",
+      "barassi-contento-4.jfif",
+      "barassi-contento-5.jfif",
+      "brassi-contento-3.jfif",
+      "barassi-contento-7.jfif",
+      "barassi-contento-8.jfif",
+      "barassi-contento-9.jfif"
+    ];
+    let imagenesCorrectasDisponibles = [...imagenesCorrectas];
+
+    const imagenesError = [
+      "barassi-triste-1.jfif",
+      "barassi-triste-2.jfif",
+      "barassi-triste-3.jfif",
+      "barassi-triste-4.jpg",
+      "barassi-triste-5.jpg",
+      "barassi-triste-6.jfif"
+    ];
+    let indexError = 0;
+
+    let index = 0;
+    let estado = [];
+    let audioYaReproducido = false;
+
+    function mostrarPalabra() {
+      const display = estado.join(" ");
+      document.getElementById("word").textContent = display;
+    }
+
+    function cargarPalabra() {
+      document.getElementById("feedback").textContent = "";
+      document.getElementById("barassiImg").style.display = "none";
+      document.getElementById("gifFinal").style.display = "none";
+      document.getElementById("nextBtn").style.display = "none";
+      document.getElementById("letter").value = "";
+      const palabraActual = palabras[index].palabra.toUpperCase();
+      estado = Array(palabraActual.length).fill("_");
+      document.getElementById("hint").textContent = "Pista: " + palabras[index].pista;
+      mostrarPalabra();
+    }
+
+    function checkLetter() {
+      const letra = document.getElementById("letter").value.toUpperCase();
+      const palabraActual = palabras[index].palabra.toUpperCase();
+      let acierto = false;
+
+      for (let i = 0; i < palabraActual.length; i++) {
+        if (palabraActual[i] === letra && estado[i] === "_") {
+          estado[i] = letra;
+          acierto = true;
+        }
+      }
+
+      mostrarPalabra();
+      document.getElementById("letter").value = "";
+
+      if (!estado.includes("_")) {
+        document.getElementById("feedback").textContent = "🎉 ¡Correcto!";
+        document.getElementById("nextBtn").style.display = "inline-block";
+
+        if (!audioYaReproducido) {
+          document.getElementById("correctSound").play();
+          audioYaReproducido = true;
+        }
+
+        if (imagenesCorrectasDisponibles.length > 0) {
+          const randomIndex = Math.floor(Math.random() * imagenesCorrectasDisponibles.length);
+          const selectedImg = imagenesCorrectasDisponibles.splice(randomIndex, 1)[0];
+          document.getElementById("barassiImg").src = selectedImg;
+        } else {
+          document.getElementById("barassiImg").src = imagenesCorrectas[Math.floor(Math.random() * imagenesCorrectas.length)];
+        }
+
+        document.getElementById("barassiImg").style.display = "block";
+      } else {
+        if (acierto) {
+          document.getElementById("feedback").textContent = "✔️ Letra correcta";
+          document.getElementById("barassiImg").style.display = "none";
+        } else {
+          document.getElementById("feedback").textContent = "❌ Letra incorrecta";
+          document.getElementById("barassiImg").src = imagenesError[indexError];
+          document.getElementById("barassiImg").style.display = "block";
+          indexError = (indexError + 1) % imagenesError.length;
+        }
+      }
+    }
+
+    function nextWord() {
+      index++;
+      if (index >= palabras.length) {
+        document.getElementById("hint").textContent = "🏁 Juego finalizado";
+        document.getElementById("word").textContent = "";
+        document.getElementById("nextBtn").style.display = "none";
+        document.getElementById("letter").style.display = "none";
+        document.querySelector("button").style.display = "none";
+        document.getElementById("feedback").textContent = "¡Gracias por jugar!";
+        document.getElementById("barassiImg").style.display = "none";
+        document.getElementById("gifFinal").style.display = "block";
+        return;
+      }
+      cargarPalabra();
+    }
+
+    cargarPalabra();
+  </script>
+</body>
+</html>
