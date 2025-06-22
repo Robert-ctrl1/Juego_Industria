@@ -13,27 +13,57 @@
     }
     .container {
       background: white;
-      padding: 30px;
-      border-radius: 12px;
-      max-width: 600px;
+      padding: 40px;
+      border-radius: 15px;
+      max-width: 700px;
       margin: auto;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
       position: relative;
       z-index: 1;
     }
     h1 { color: #333; }
-    .word { font-size: 36px; letter-spacing: 10px; margin: 20px 0; }
+    .word {
+      font-size: 36px;
+      letter-spacing: 6px;
+      margin: 20px 0;
+      white-space: pre-wrap;
+    }
     .hint { font-size: 18px; color: #666; margin-bottom: 10px; }
-    input[type="text"] { font-size: 24px; width: 50px; text-align: center; text-transform: uppercase; }
-    button { font-size: 16px; margin: 10px 5px; padding: 10px 20px; cursor: pointer; }
-    .feedback { font-weight: bold; margin-top: 10px; color: green; }
-    .barassi-img, #gifFinal { display: none; margin: 20px auto; width: 400px;border-radius: 10px; }
+    input[type="text"] {
+      font-size: 24px;
+      width: 50px;
+      text-align: center;
+      text-transform: uppercase;
+    }
+    button {
+      font-size: 16px;
+      margin: 10px 5px;
+      padding: 10px 20px;
+      cursor: pointer;
+    }
+    .feedback {
+      font-weight: bold;
+      margin-top: 10px;
+      color: green;
+    }
+    .barassi-img, #gifFinal {
+      display: none;
+      margin: 20px auto;
+      width: 400px;
+      border-radius: 10px;
+    }
 
-    /* Confetti estilo papelitos */
-    .confetti { position: fixed; top: 0;left: 0; width: 100%; height: 0; z-index: 999; pointer-events: none;}
-
-    .confetti-piece { position: absolute;width: 10px; height: 20px; background-color: rgb(76, 5, 117); opacity: 0.9;animation: fall linear infinite; transform: rotate(0deg); border-radius: 2px;}
-
+    .confetti { position: fixed; top: 0; left: 0; width: 100%; height: 0; z-index: 999; pointer-events: none; }
+    .confetti-piece {
+      position: absolute;
+      width: 10px;
+      height: 20px;
+      background-color: #FFD700;
+      opacity: 0.9;
+      animation: fall linear infinite;
+      transform: rotate(0deg);
+      border-radius: 2px;
+    }
     @keyframes fall {
       0% {
         transform: translateY(0) rotate(0deg);
@@ -59,7 +89,6 @@
     <br>
     <button onclick="nextWord()" id="nextBtn" style="display:none;">➡️ Siguiente palabra</button>
   </div>
-
   <div class="confetti" id="confettiContainer"></div>
 
   <audio id="correctSound">
@@ -75,35 +104,60 @@
       { palabra: "KAIZEN", pista: "Filosofía japonesa que promueve la mejora continua a través de cambios pequeños y constantes, buscando la optimización de procesos y la eliminación de desperdicios" },
       { palabra: "ENERGIA RENOVABLE", pista: "Proviene de fuentes naturales que se reponen continuamente y no se agotan con su uso" },
       { palabra: "PUNA", pista: "Región compartida por Jujuy, Salta y Catamarca, considerada un área de gran potencial para la extracción de litio, un mineral clave para las baterías y la transición energética" },
-      { palabra: "CONTROLADOR LOGICO PROGRAMABLE", pista: "Dispositivo electrónico digital diseñado para automatizar procesos industriales" },
+      { palabra: "PLC", pista: "Siglas de dispositivo electrónico digital diseñado para automatizar procesos industriales" },
       { palabra: "ARMINERA", pista: "Evento exclusivo para profesionales, empresarios e interesados en la industria minera" },
-      { palabra: "INTELIGENCIA ARTIFICIAL", pista: "Tecnología que revolucionó la industria al automatizar procesos, optimizar la producción y mejorar la toma de decisiones" },
-      { palabra: "RED MIA", pista: "Organización que busca promover el liderazgo femenino y la participación de las mujeres en diferentes sectores industriales" },
       { palabra: "LEAN MANUFACTURING", pista: "Sistema de gestión de la producción que busca maximizar el valor para el cliente eliminando desperdicios y optimizando procesos" },
       { palabra: "DOWNSTREAM", pista: "En la industria petrolera: fase final de la cadena de suministro, que abarca la refinación de petróleo crudo y la transformación y distribución de productos derivados del petróleo" },
       { palabra: "REFINERIA", pista: "Instalación industrial que procesa grandes cantidades de materias primas, como petróleo, para producir productos de valor agregado, como combustibles, lubricantes y productos petroquímicos" }
     ];
 
-    const imagenesCorrectas = ["barassi-2022.webp", "download.jpg"];
+    const imagenesCorrectas = [
+      "barassi-2022.webp", "barassi-contento-4.jfif", "brassi-contento-3.jfif",
+      "barassi-contento-5.jfif", "barassi-contento-7.jfif",
+      "barassi-contento-8.jfif", "barassi-contento-9.jfif"
+    ];
     let imagenesCorrectasDisponibles = [...imagenesCorrectas];
-    const imagenesError = ["barassi-triste-1.jfif", "barassi-triste-2.jfif"];
-    let indexError = 0;
+
+    const imagenesError = [
+      "barassi-triste-1.jfif", "barassi-triste-2.jfif", "barassi-triste-3.jfif",
+      "barassi-triste-4.jpg", "barassi-triste-5.jpg", "barassi-triste-6.jfif", "barassi-triste-7.jfif", "barassi-triste-8.jfif", "barassi-triste-9.jfif"
+    ];
+
     let index = 0;
     let estado = [];
+    let errores = 0;
     let audioYaReproducido = false;
+    let indexError = 0;
 
     function mostrarPalabra() {
-      document.getElementById("word").textContent = estado.join(" ");
+      const display = estado.map(l => l === " " ? "   " : l).join(" ");
+      const wordDiv = document.getElementById("word");
+      const totalCaracteres = estado.length;
+
+      if (totalCaracteres > 25) {
+        wordDiv.style.fontSize = "15px";
+        wordDiv.style.letterSpacing = "3px";
+      } else if (totalCaracteres > 18) {
+        wordDiv.style.fontSize = "20px";
+        wordDiv.style.letterSpacing = "4px";
+      } else {
+        wordDiv.style.fontSize = "25px";
+        wordDiv.style.letterSpacing = "6px";
+      }
+
+      wordDiv.textContent = display;
     }
 
     function cargarPalabra() {
+      errores = 0;
       document.getElementById("feedback").textContent = "";
       document.getElementById("barassiImg").style.display = "none";
       document.getElementById("gifFinal").style.display = "none";
       document.getElementById("nextBtn").style.display = "none";
-      document.getElementById("letter").value = "";
+      document.getElementById("letter").style.display = "inline-block";
+      document.querySelector("button").style.display = "inline-block";
       const palabraActual = palabras[index].palabra.toUpperCase();
-      estado = Array(palabraActual.length).fill("_");
+      estado = Array.from(palabraActual).map(c => c === " " ? " " : "_");
       document.getElementById("hint").textContent = "Pista: " + palabras[index].pista;
       mostrarPalabra();
     }
@@ -143,10 +197,20 @@
           document.getElementById("feedback").textContent = "✔️ Letra correcta";
           document.getElementById("barassiImg").style.display = "none";
         } else {
-          document.getElementById("feedback").textContent = "❌ Letra incorrecta";
+          errores++;
+          document.getElementById("feedback").textContent = `❌ Letra incorrecta (${errores}/5)`;
           document.getElementById("barassiImg").src = imagenesError[indexError];
           document.getElementById("barassiImg").style.display = "block";
           indexError = (indexError + 1) % imagenesError.length;
+
+          if (errores >= 5) {
+            estado = Array.from(palabraActual);
+            mostrarPalabra();
+            document.getElementById("feedback").textContent = "💥 ¡Se acabaron los intentos!";
+            document.getElementById("letter").style.display = "none";
+            document.querySelector("button").style.display = "none";
+            document.getElementById("nextBtn").style.display = "inline-block";
+          }
         }
       }
     }
